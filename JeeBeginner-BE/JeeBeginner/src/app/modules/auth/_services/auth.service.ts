@@ -8,6 +8,7 @@ import { environment } from 'src/environments/environment';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import jwt_decode from 'jwt-decode';
+import { throwError } from 'rxjs';
 
 const API_AUTH_URL = `${environment.ApiRoot}/authorization`;
 
@@ -25,7 +26,7 @@ export class AuthService implements OnDestroy {
   currentUserSubject: BehaviorSubject<User>;
   isLoadingSubject: BehaviorSubject<boolean>;
   errorMessageSubject: BehaviorSubject<string>;
-
+  userPermissions: any[];
   isLoggedIn$: Observable<boolean>;
   isLoggedOut$: Observable<boolean>;
 
@@ -75,6 +76,31 @@ export class AuthService implements OnDestroy {
     );
   }
 
+//tôi muốn giải mã token để get role , role là 1 mảng 
+      decodeToken(token: string): any {
+        try {
+          return jwt_decode(token);
+        } catch (error) {
+          console.error('Error decoding token:', error);
+          return null;
+        }
+      }
+
+      getUserRolesFromToken(): Observable<string[]> {
+        debugger
+        const auth = this.getAuthFromLocalStorage();
+        if (auth && auth.user && auth.user.Role) {
+          // Split the roles string by comma and trim any whitespace
+          const rolesArray = auth.user.Role.split(',').map(role => role.trim());
+          // Return the roles array wrapped in an observable
+          return of(rolesArray);
+        }
+        // Return an empty observable if roles couldn't be retrieved
+        return of([]);
+      }
+      
+  
+  
   prepareLogout() {
     localStorage.removeItem(this.authLocalStorageToken);
     this.router.navigate(['/auth/login'], {

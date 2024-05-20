@@ -1,33 +1,48 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router } from '@angular/router';
-import { AuthService } from './auth.service'; // Adjust the path to your AuthService
+import { AuthService } from './auth.service';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
-export class AuthGuard implements CanActivate {
+export class RoleGuard implements CanActivate {
+
   constructor(private authService: AuthService, private router: Router) {}
 
   canActivate(
     next: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot
-  ): Observable<boolean> | Promise<boolean> | boolean {
-    return this.authService.isLoggedIn$.pipe(
-      map((isLoggedIn: boolean) => {
-        if (!isLoggedIn) {
-          this.router.navigate(['/auth/login']);
-          return false;
+    state: RouterStateSnapshot): Observable<boolean> {
+
+    const expectedRole = next.data.role;
+
+    return new Observable<boolean>((observer) => {
+      this.authService.getUserRolesFromToken().subscribe(
+        (userRoles: string[]) => {
+          if (!userRoles) {
+            console.error('User roles not found.');
+            this.router.navigate(['/access-denied']);
+            observer.next(false);
+            observer.complete();
+          } else {
+            const hasAccess = userRoles.includes(expectedRole);
+            if (hasAccess) {
+              observer.next(true);
+              observer.complete();
+            } else {
+              this.router.navigate(['/access-denied']);
+              observer.next(false);
+              observer.complete();
+            }
+          }
+        },
+        (error) => {
+          console.error('Error occurred while retrieving user roles:', error);
+          this.router.navigate(['/access-denied']);
+          observer.next(false);
+          observer.complete();
         }
-        const user = this.authService.currentUserValue;
-        const expectedRole = next.data.expectedRole;
-        if (expectedRole && user.Role !== expectedRole) {
-          this.router.navigate(['/unauthorized']);
-          return false;
-        }
-        return true;
-      })
-    );
+      );
+    });
   }
 }

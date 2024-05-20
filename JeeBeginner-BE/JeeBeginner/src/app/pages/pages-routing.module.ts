@@ -1,7 +1,7 @@
 import { NgModule } from "@angular/core";
 import { Routes, RouterModule } from "@angular/router";
 import { LayoutComponent } from "./_layout/layout.component";
-import { AuthGuard } from '../modules/auth/_services/auth.guard'; // Adjust the path to your AuthGuard
+import { RoleGuard } from '../modules/auth/_services/auth.guard'; // Adjust the path to your AuthGuard
 
 const routes: Routes = [
   {
@@ -61,6 +61,8 @@ const routes: Routes = [
           import(
             "./JeeBeginner/Management/DanhMucManagement/LoaiMatHangManagement/loaimathang-management.module"
           ).then((m) => m.LoaiMatHangManagementModule),
+          canActivate: [RoleGuard], 
+          data: { role: '3502' } 
       },
       {
         path: "Management/DanhMucManagement/DVTManagement",
@@ -68,8 +70,8 @@ const routes: Routes = [
           import(
             "./JeeBeginner/Management/DanhMucManagement/DVTManagement/dvt-management.module"
           ).then((m) => m.DVTManagementModule),
-          canActivate: [AuthGuard],
-          data: { expectedRole: 'quanlydonvitinh' }, 
+          canActivate: [RoleGuard], 
+          data: { role: '3503' } 
       },
       {
         path: "Management/DanhMucManagement/NhanHieuManagement",
@@ -77,13 +79,16 @@ const routes: Routes = [
           import(
             "./JeeBeginner/Management/DanhMucManagement/NhanHieuManagement/nhanhieu-management.module"
           ).then((m) => m.NhanHieuManagementModule),
+          canActivate: [RoleGuard], // Thêm guard vào route
+          data: { role: '3610' } // Chỉ định quyền truy cập cần thiết
       },
       {
         path: "Management/DanhMucManagement/XuatXuManagement",
         loadChildren: () =>
           import(
             "./JeeBeginner/Management/DanhMucManagement/XuatXuManagement/xuatxu-management.module"
-          ).then((m) => m.XuatXuManagementModule),
+          ).then((m) => m.XuatXuManagementModule), canActivate: [RoleGuard], // Thêm guard vào route
+          data: { role: '3700' } // Chỉ định quyền truy cập cần thiết
       },
       {
         path: "Management/DanhMucManagement/DoiTacBaoHiemManagement",
